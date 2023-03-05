@@ -6,29 +6,6 @@ const {
   getOneplantLocations,
 } = require("./helpers");
 
-// const runner = async ({ items_list, location_id }) => {
-//   const { sessionToken } = await getOneplantAuth({
-//     company_id: "22",
-//     location_id: "8",
-//     date: "1950-03-01",
-//     url_prefix: "https://menuapi.waiosoft.com",
-//   });
-
-//   for await (const item of items_list) {
-//     console.log("item", item);
-//   }
-
-//   const response = await getOneplantPricesList({
-//     items_list,
-//     company_id: "22",
-//     location_id,
-//     sessionToken,
-//     url_prefix: "https://menuapi.waiosoft.com",
-//   });
-
-//   console.log("response", response);
-// };
-
 const runner = async ({
   company_id,
   url_prefix = "https://menuapi.waiosoft.com",

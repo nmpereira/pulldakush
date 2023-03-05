@@ -84,36 +84,6 @@ const getOneplantProducts = async ({
   }
 };
 
-// const getOneplantProductPrice = async ({
-//   company_id,
-//   location_id,
-//   product_id,
-//   sessionToken,
-//   url_prefix,
-// }) => {
-//   try {
-//     const product_url = `${url_prefix}/location/${location_id}/products/${product_id}`;
-//     const product_response = await axios
-//       .get(product_url, {
-//         headers: {
-//           "waio-company": company_id,
-//           Authorization: `Bearer ${sessionToken}`,
-//         },
-//       })
-//       .catch((error) => {
-//         console.log("getOneplantProductPrice error", error);
-//       });
-//     console.log(
-//       "getOneplantProductPrice",
-//       product_id,
-//       product_response.data.body
-//     );
-//     return product_response.data.body;
-//   } catch (error) {
-//     throw new Error(error);
-//   }
-// };
-
 const getOneplantVariationPrices = async ({
   company_id,
   location_id,
@@ -149,41 +119,6 @@ const getOneplantVariationPrices = async ({
     throw new Error(error);
   }
 };
-
-// const getOneplantAllProductPrices = async ({
-//   company_id,
-//   location_id,
-//   sessionToken,
-//   url_prefix,
-// }) => {
-//   try {
-//     const product_list = await getOneplantProducts({
-//       company_id,
-//       location_id,
-//       sessionToken,
-//       url_prefix,
-//     });
-//     const cleaned_product_list = product_list.body.products;
-
-//     const product_variations = [];
-//     for await (const product of cleaned_product_list) {
-//       const product_variation = await getOneplantVariationPrices({
-//         company_id,
-//         location_id,
-//         product_id: product.productId,
-//         sessionToken,
-//         url_prefix,
-//       });
-//       console.log("product_variation", product_variation.response);
-//       product_variations.push(...product_variation.response);
-//     }
-
-//     console.log("getOneplantAllProductPrices", product_variations);
-//     return product_variations;
-//   } catch (error) {
-//     throw new Error(error);
-//   }
-// };
 
 const getOneplantAllProductIds = async ({
   company_id,
@@ -288,9 +223,6 @@ const mongoRunner = async ({ variation_document, location_id }) => {
 module.exports = {
   getOneplantAuth,
   getOneplantLocations,
-  // getOneplantProducts,
-  // getOneplantProductPrice,
-  // getOneplantAllProductPrices,
   getOneplantVariationPrices,
   mongoRunner,
   getOneplantAllProductIds,
