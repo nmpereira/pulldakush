@@ -86,6 +86,16 @@ const onePlantSchema = new mongoose.Schema({
     type: Map,
     required: true,
   },
+
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+
+  updatedAt: {
+    type: Date,
+    required: true,
+  },
 });
 
 module.exports = mongoose.model("OnePlant", onePlantSchema);

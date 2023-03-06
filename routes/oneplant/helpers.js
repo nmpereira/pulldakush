@@ -77,7 +77,7 @@ const getOneplantProducts = async ({
       .catch((error) => {
         console.log("getOneplantProducts error", error);
       });
-    console.log("getOneplantProducts");
+
     return product_response.data;
   } catch (error) {
     throw new Error(error);
@@ -92,6 +92,7 @@ const getOneplantVariationPrices = async ({
   url_prefix,
 }) => {
   try {
+    // console.log("getOneplantVariationPrices", product_id);
     const product_url = `${url_prefix}/location/${location_id}/products/${product_id}`;
     const product_response = await axios
       .get(product_url, {
@@ -104,17 +105,29 @@ const getOneplantVariationPrices = async ({
         console.log("getOneplantVariationPrices error", error);
       });
 
-    const variations = product_response.data.body.variations;
+    if (
+      product_response &&
+      product_response.data &&
+      product_response.data.body &&
+      product_response.data.body.variations
+    ) {
+      const variations = product_response.data.body.variations;
 
-    // add product name and brand name to each variation
-    variations.forEach((variation) => {
-      variation.productName = product_response.data.body.productName;
-      variation.brandname = product_response.data.body.brandname;
-    });
+      // add product name and brand name to each variation
+      variations.forEach((variation) => {
+        variation.productName = product_response.data.body.productName;
+        variation.brandname = product_response.data.body.brandname;
+      });
 
-    return {
-      response: variations,
-    };
+      return {
+        response: variations,
+      };
+    } else {
+      console.log(
+        "Invalid response from API call",
+        product_response.data.errorMessage
+      );
+    }
   } catch (error) {
     throw new Error(error);
   }
@@ -140,7 +153,7 @@ const getOneplantAllProductIds = async ({
       product_ids.push(product.productId);
     }
 
-    console.log("getOneplantAllProductIds", product_ids);
+    console.log("getOneplantAllProductIds for:", location_id, product_ids);
     return product_ids;
   } catch (error) {
     throw new Error(error);
@@ -148,24 +161,19 @@ const getOneplantAllProductIds = async ({
 };
 
 const mongoRunner = async ({ variation_document, location_id }) => {
+  const now = Date.now();
+
   const variation = await OnePlant.findOne({
     variationid: variation_document.variationid,
     location_id,
   });
-
-  variation_document.price = parseFloat(variation_document.price);
-  variation_document.memberPrice =
-    parseFloat(variation_document.memberPrice) ||
-    parseFloat(variation_document.price);
-  variation_document.equivalent =
-    parseFloat(variation_document.equivalent) || 0;
-
-  const now = Date.now();
-
   if (!variation) {
     const result = await OnePlant.create({
+      location_id: location_id,
       ...variation_document,
-      location_id,
+
+      updatedAt: now,
+
       priceHistory: {
         [now]: variation_document.price,
       },

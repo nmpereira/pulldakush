@@ -4,7 +4,7 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
+    "start": "node  server.js",
     "dev": "nodemon -e js,ejs,html,json,css -w . -w public -w views -w routes -w models server.js"
   },
   "repository": {
