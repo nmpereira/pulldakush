@@ -1,6 +1,4 @@
 const axios = require("axios");
-const mongoose = require("mongoose");
-const OnePlant = require("../../models/oneplant");
 
 const getOneplantAuth = async ({
   company_id,
@@ -160,78 +158,9 @@ const getOneplantAllProductIds = async ({
   }
 };
 
-const mongoRunner = async ({ variation_document, location_id }) => {
-  const now = Date.now();
-
-  const variation = await OnePlant.findOne({
-    variationid: variation_document.variationid,
-    location_id,
-  });
-  if (!variation) {
-    const result = await OnePlant.create({
-      location_id: location_id,
-      ...variation_document,
-
-      updatedAt: now,
-
-      priceHistory: {
-        [now]: variation_document.price,
-      },
-      memberPriceHistory: {
-        [now]: variation_document.memberPrice,
-      },
-    });
-
-    return {
-      result,
-
-      action: [`Created new variation ${variation_document.variationid}`],
-    };
-  } else {
-    variation.location_id = location_id;
-
-    const action = [];
-    if (
-      variation.price !== variation_document.price ||
-      variation.memberPrice !== variation_document.memberPrice
-    ) {
-      if (variation.price !== variation_document.price) {
-        variation.priceHistory = new Map([
-          ...variation.priceHistory,
-          [now, variation_document.price],
-        ]);
-
-        action.push(
-          `Updated variation ${variation_document.variationid} with new price: ${variation_document.price}`
-        );
-      }
-      if (variation.memberPrice !== variation_document.memberPrice) {
-        variation.memberPriceHistory = new Map([
-          ...variation.memberPriceHistory,
-          [now, variation_document.memberPrice],
-        ]);
-        action.push(
-          `Updated variation ${variation_document.variationid} with new member price: ${variation_document.memberPrice}`
-        );
-      }
-
-      return {
-        result: await variation.save(),
-        action,
-      };
-    } else {
-      return {
-        result: variation,
-        action: [`No changes to variation ${variation_document.variationid}`],
-      };
-    }
-  }
-};
-
 module.exports = {
   getOneplantAuth,
   getOneplantLocations,
   getOneplantVariationPrices,
-  mongoRunner,
   getOneplantAllProductIds,
 };

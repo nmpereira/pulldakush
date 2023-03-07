@@ -1,26 +1,10 @@
 const express = require("express");
 const router = express.Router();
-const axios = require("axios");
-const {
-  getOneplantAuth,
-  // getOneplantLocations,
-  // getOneplantProducts,
-  // getOneplantProductPrice,
-  // getOneplantVariationPrices,
-  // getOneplantAllProductPrices,
-} = require("./helpers");
-const runner = require("./runner");
-const test = require("./test");
 
-const url_prefix = `https://menuapi.waiosoft.com`;
-
-const company_id = "22";
-const default_location = "8";
+const onePlantRunner = require("./onePlantRunner");
 
 console.log("oneplant script starting...");
-test();
-
-// runner({ company_id, url_prefix });
+onePlantRunner();
 
 router.get("/", (req, res) => {
   res.status(200).send({ msg: "oneplant" });

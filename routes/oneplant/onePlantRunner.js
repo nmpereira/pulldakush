@@ -1,9 +1,7 @@
-const { getOneplantAllProductIds, mongoRunner } = require("./helpers");
-const mongoose = require("mongoose");
+const { getOneplantAllProductIds } = require("./helpers");
 const OnePlant = require("../../models/oneplant");
 
-const test = async () => {
-  const axios = require("axios");
+const onePlantRunner = async () => {
   const { getOneplantAuth } = require("./helpers");
   const { getOneplantLocations } = require("./helpers");
   const { getOneplantVariationPrices } = require("./helpers");
@@ -28,15 +26,17 @@ const test = async () => {
 
   const locations_list = locations_list_response.body.locations
     .map((location) => location.locationid)
-    .filter((location) => location === 8);
+    .filter((location) => [8, 3, 33, 15].includes(location));
+  // .filter((location) => location === 8);
 
   console.log("locations_list", locations_list);
 
-  const variation_documents = [];
+  // const variation_documents = [];
 
   const variation_documents_chunk = [];
   const variation_chunk_size = 100;
   let global_counter = 0;
+  const updated_messages = [];
 
   for await (const location_id of locations_list) {
     const items_list = await getOneplantAllProductIds({
@@ -114,11 +114,16 @@ const test = async () => {
 
             messages_array.push(write_response.result.priceHistory);
             messages_array.push(write_response.result.memberPriceHistory);
+
+            updated_messages.push(
+              action,
+              write_response.result.priceHistory,
+              write_response.result.memberPriceHistory
+            );
           }
         });
       }
       console.log(
-        messages_array,
         "locaionid: ",
         location_id,
         "|| counter:",
@@ -129,6 +134,12 @@ const test = async () => {
     }
   }
   console.log(
+    "Updated:",
+    updated_messages.length,
+    "|| messages:",
+    updated_messages
+  );
+  console.log(
     "time:",
     new Date(Date.now() - start_time).toISOString().substr(11, 8)
   );
@@ -136,4 +147,79 @@ const test = async () => {
   console.log("done with all locations");
 };
 
-module.exports = test;
+const mongoRunner = async ({ variation_document, location_id }) => {
+  const now = Date.now();
+
+  const variation = await OnePlant.findOne({
+    variationid: variation_document.variationid,
+    location_id,
+  });
+  if (!variation) {
+    const result = await OnePlant.create({
+      location_id: location_id,
+      ...variation_document,
+
+      updatedAt: now,
+
+      priceHistory: {
+        [now]: variation_document.price,
+      },
+      memberPriceHistory: {
+        [now]: variation_document.memberPrice,
+      },
+      priceHistoryUpdatedAt: now,
+      memberPriceHistoryUpdatedAt: now,
+    });
+
+    return {
+      result,
+
+      action: [`Created new variation ${variation_document.variationid}`],
+    };
+  } else {
+    variation.location_id = location_id;
+
+    const action = [];
+    if (
+      variation.price !== variation_document.price ||
+      variation.memberPrice !== variation_document.memberPrice
+    ) {
+      if (variation.price !== variation_document.price) {
+        variation.priceHistory = new Map([
+          ...variation.priceHistory,
+          [now, variation_document.price],
+        ]);
+        variation.priceHistoryUpdatedAt = now;
+
+        action.push(
+          `Updated variation ${variation_document.variationid} with new price: ${variation_document.price}`
+        );
+      }
+      if (variation.memberPrice !== variation_document.memberPrice) {
+        variation.memberPriceHistory = new Map([
+          ...variation.memberPriceHistory,
+          [now, variation_document.memberPrice],
+        ]);
+        variation.memberPriceHistoryUpdatedAt = now;
+        action.push(
+          `Updated variation ${variation_document.variationid} with new member price: ${variation_document.memberPrice}`
+        );
+      }
+
+      return {
+        result: await variation.save(),
+        action,
+      };
+    } else {
+      // update the updatedAt field
+      variation.updatedAt = now;
+
+      return {
+        result: await variation.save(),
+        action: [`No changes to variation ${variation_document.variationid}`],
+      };
+    }
+  }
+};
+
+module.exports = onePlantRunner;

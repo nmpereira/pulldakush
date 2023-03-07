@@ -86,6 +86,14 @@ const onePlantSchema = new mongoose.Schema({
     type: Map,
     required: true,
   },
+  priceHistoryUpdatedAt: {
+    type: Date,
+    required: false,
+  },
+  memberPriceHistoryUpdatedAt: {
+    type: Date,
+    required: false,
+  },
 
   createdAt: {
     type: Date,
