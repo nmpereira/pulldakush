@@ -8,9 +8,9 @@
     "npm": "9.5.0"
   },
   "scripts": {
-    "start": "node  server.js",
+    "start": "node  src/server.js",
     "build": "",
-    "dev": "nodemon -e js,ejs,html,json,css -w . -w public -w views -w routes -w models server.js"
+    "dev": "nodemon -e js,ejs,html,json,css -w . -w public -w views -w routes -w models src/server.js"
   },
   "repository": {
     "type": "git",
