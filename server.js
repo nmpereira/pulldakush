@@ -1,14 +1,24 @@
 const express = require("express");
 const app = express();
 require("dotenv").config();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 2528;
 const dbUri = process.env.MONGODB_URI;
-const axios = require("axios");
 const routes = require("./routes/routes");
+const { scheduler } = require("./scheduler");
+const { startAll } = require("./routes/helpers/startAll");
 
 const mongoose = require("mongoose");
 
 app.use("/api", routes);
+
+// run if in production
+if (process.env.NODE_ENV === "production") {
+  scheduler();
+} else {
+  (async () => {
+    await startAll();
+  })();
+}
 
 app.get("/", (req, res) => {
   res.status(200).send("Hello World!");

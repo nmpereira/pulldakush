@@ -100,14 +100,45 @@ const getOneplantVariationPrices = async ({
         },
       })
       .catch((error) => {
+        if (product_response.syscall === "getaddrinfo") {
+          console.log("Invalid response from API call (data undefined)", error);
+          return null;
+        }
         console.log("getOneplantVariationPrices error", error);
       });
 
+    if (product_response.data.statusCode !== 200) {
+      if (product_response.data.statusCode === 404) {
+        if (
+          product_response.data.body === "Product not found, or not in stock."
+        ) {
+          console.log(
+            "404 handled for",
+            product_id,
+            "at",
+            location_id,
+            "response:",
+            product_response.data
+          );
+          return null;
+        }
+        console.log("404 unhanded:", product_response.data);
+      }
+      console.log(
+        "Error: Non-404 code received for",
+        product_id,
+        "at",
+        location_id,
+        "response:",
+        product_response.data
+      );
+    }
+
     if (
       product_response &&
-      product_response.data &&
-      product_response.data.body &&
-      product_response.data.body.variations
+      product_response?.data &&
+      product_response?.data?.body &&
+      product_response?.data?.body?.variations
     ) {
       const variations = product_response.data.body.variations;
 
@@ -115,6 +146,7 @@ const getOneplantVariationPrices = async ({
       variations.forEach((variation) => {
         variation.productName = product_response.data.body.productName;
         variation.brandname = product_response.data.body.brandname;
+        variation.product_id = product_id;
       });
 
       return {
@@ -127,6 +159,7 @@ const getOneplantVariationPrices = async ({
       );
     }
   } catch (error) {
+    console.log("THROWN error", error);
     throw new Error(error);
   }
 };

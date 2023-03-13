@@ -1,7 +1,9 @@
 const { getOneplantAllProductIds } = require("./helpers");
-const OnePlant = require("../../models/oneplant");
+
+const { mongoRunner } = require("../helpers/mongoRunner");
 
 const onePlantRunner = async () => {
+  console.log("oneplant script starting...");
   const { getOneplantAuth } = require("./helpers");
   const { getOneplantLocations } = require("./helpers");
   const { getOneplantVariationPrices } = require("./helpers");
@@ -10,6 +12,7 @@ const onePlantRunner = async () => {
   const company_id = "22";
   const default_location = "8";
   const start_time = Date.now();
+  const company_name = "OnePlant";
 
   const { sessionToken } = await getOneplantAuth({
     company_id: "22",
@@ -33,8 +36,8 @@ const onePlantRunner = async () => {
 
   // const variation_documents = [];
 
-  const variation_documents_chunk = [];
-  const variation_chunk_size = 100;
+  // const variation_documents_chunk = [];
+  // const variation_chunk_size = 100;
   let global_counter = 0;
   const updated_messages = [];
 
@@ -65,21 +68,42 @@ const onePlantRunner = async () => {
           url_prefix,
         });
 
-        const variation_document = variation_prices.response[0];
+        if (!variation_prices.response.length || !variation_prices.response) {
+          return;
+        }
+
+        const variation_document = variation_prices?.response[0];
+
+        // rename and delete memberPrice to promoPrice and memberDiscountPercent to promoDiscountPercent
+        variation_document.promoPrice = variation_document.memberPrice;
+        delete variation_document.memberPrice;
+
+        variation_document.promoDiscountPercent =
+          variation_document.memberDiscountPercent;
+        delete variation_document.memberDiscountPercent;
+
+        variation_document.variation_name = variation_document.variation;
+        delete variation_document.variation;
+
+        variation_document.total_size = variation_document.equivalent;
+        delete variation_document.equivalent;
+
+        variation_document.pack_size = variation_document.packsize;
+        delete variation_document.packsize;
 
         variation_document.price = parseFloat(variation_document.price);
-        variation_document.memberPrice =
-          parseFloat(variation_document.memberPrice) ||
+        variation_document.promoPrice =
+          parseFloat(variation_document.promoPrice) ||
           parseFloat(variation_document.price);
-        variation_document.equivalent =
-          parseFloat(variation_document.equivalent) || 0;
+        variation_document.total_size =
+          parseFloat(variation_document.total_size) || 0;
         variation_document.originalPrice =
           parseFloat(variation_document.originalPrice) ||
           parseFloat(variation_document.price);
         variation_document.discountPercent =
           parseFloat(variation_document.discountPercent) || 0;
-        variation_document.memberDiscountPercent =
-          parseFloat(variation_document.memberDiscountPercent) || 0;
+        variation_document.promoDiscountPercent =
+          parseFloat(variation_document.promoDiscountPercent) || 0;
         variation_document.location_id = location_id;
 
         return variation_document;
@@ -87,21 +111,22 @@ const onePlantRunner = async () => {
 
       const variation_documents = await Promise.all(variation_promises);
 
-      for (
-        let i = 0;
-        i < variation_documents.length;
-        i += variation_chunk_size
-      ) {
-        variation_documents_chunk.push(
-          variation_documents.slice(i, i + variation_chunk_size)
-        );
-      }
+      // for (
+      //   let i = 0;
+      //   i < variation_documents.length;
+      //   i += variation_chunk_size
+      // ) {
+      //   variation_documents_chunk.push(
+      //     variation_documents.slice(i, i + variation_chunk_size)
+      //   );
+      // }
 
       const messages_array = [];
       for await (const document of variation_documents) {
         const write_response = await mongoRunner({
           variation_document: document,
           location_id,
+          company_name,
         });
 
         write_response.action.forEach((action) => {
@@ -113,12 +138,17 @@ const onePlantRunner = async () => {
             messages_array.push(action);
 
             messages_array.push(write_response.result.priceHistory);
-            messages_array.push(write_response.result.memberPriceHistory);
+            messages_array.push(write_response.result.promoPriceHistory);
 
             updated_messages.push(
               action,
               write_response.result.priceHistory,
-              write_response.result.memberPriceHistory
+              write_response.result.promoPriceHistory
+            );
+            console.log(
+              action,
+              write_response.result.priceHistory,
+              write_response.result.promoPriceHistory
             );
           }
         });
@@ -145,81 +175,8 @@ const onePlantRunner = async () => {
   );
 
   console.log("done with all locations");
-};
 
-const mongoRunner = async ({ variation_document, location_id }) => {
-  const now = Date.now();
-
-  const variation = await OnePlant.findOne({
-    variationid: variation_document.variationid,
-    location_id,
-  });
-  if (!variation) {
-    const result = await OnePlant.create({
-      location_id: location_id,
-      ...variation_document,
-
-      updatedAt: now,
-
-      priceHistory: {
-        [now]: variation_document.price,
-      },
-      memberPriceHistory: {
-        [now]: variation_document.memberPrice,
-      },
-      priceHistoryUpdatedAt: now,
-      memberPriceHistoryUpdatedAt: now,
-    });
-
-    return {
-      result,
-
-      action: [`Created new variation ${variation_document.variationid}`],
-    };
-  } else {
-    variation.location_id = location_id;
-
-    const action = [];
-    if (
-      variation.price !== variation_document.price ||
-      variation.memberPrice !== variation_document.memberPrice
-    ) {
-      if (variation.price !== variation_document.price) {
-        variation.priceHistory = new Map([
-          ...variation.priceHistory,
-          [now, variation_document.price],
-        ]);
-        variation.priceHistoryUpdatedAt = now;
-
-        action.push(
-          `Updated variation ${variation_document.variationid} with new price: ${variation_document.price}`
-        );
-      }
-      if (variation.memberPrice !== variation_document.memberPrice) {
-        variation.memberPriceHistory = new Map([
-          ...variation.memberPriceHistory,
-          [now, variation_document.memberPrice],
-        ]);
-        variation.memberPriceHistoryUpdatedAt = now;
-        action.push(
-          `Updated variation ${variation_document.variationid} with new member price: ${variation_document.memberPrice}`
-        );
-      }
-
-      return {
-        result: await variation.save(),
-        action,
-      };
-    } else {
-      // update the updatedAt field
-      variation.updatedAt = now;
-
-      return {
-        result: await variation.save(),
-        action: [`No changes to variation ${variation_document.variationid}`],
-      };
-    }
-  }
+  return;
 };
 
 module.exports = onePlantRunner;
