@@ -16,8 +16,8 @@ router.get("/", (req, res) => {
 });
 
 router.get("/startall", async (req, res) => {
+  startAll();
   res.status(200).send({ msg: "Started all runners" });
-  await startAll();
 });
 
 module.exports = router;
