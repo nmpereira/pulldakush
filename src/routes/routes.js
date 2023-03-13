@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const startAll = require("./helpers/startAll");
+const { startAll } = require("./helpers/startAll");
 
 const oneplant = require("./oneplant/oneplant");
 router.use("/oneplant", oneplant);
