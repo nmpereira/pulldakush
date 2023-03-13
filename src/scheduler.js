@@ -10,7 +10,9 @@ const scheduler = () => {
   //   every 5 seconds
   const cronJob = new CronJob(
     // every 5 hours
-    "0 */5 * * *",
+    // "0 */5 * * *",
+    // every 1 hour
+    "0 */1 * * *",
 
     // every 30 minutes
     // "0 */30 * * * *",
