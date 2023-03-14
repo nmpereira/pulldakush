@@ -69,7 +69,6 @@ const mongoRunner = async ({
           action.push(
             `Updated variation ${variation_document.variationid} with new promo price: ${variation_document.promoPrice}`
           );
-          console.log("variation", variation);
         }
 
         return {
