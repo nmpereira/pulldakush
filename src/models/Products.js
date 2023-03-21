@@ -77,38 +77,6 @@ const ProductsSchema = new mongoose.Schema({
     type: Date,
     required: true,
   },
-  // originalPrice: {
-  //   type: String | null,
-  //   required: false,
-  // },
-  // discountPercent: {
-  //   type: String | null,
-  //   required: false,
-  // },
-  // onsale: {
-  //   type: String,
-  //   required: false,
-  // },
-  // promoDiscountPercent: {
-  //   type: String,
-  //   required: false,
-  // },
-  // promo: {
-  //   type: String,
-  //   required: false,
-  // },
-  // promoPromoName: {
-  //   type: String,
-  //   required: false,
-  // },
-  // featured: {
-  //   type: String,
-  //   required: false,
-  // },
-  // loyalty: {
-  //   type: String | null,
-  //   required: false,
-  // },
 });
 
 module.exports = mongoose.model("Product", ProductsSchema);
