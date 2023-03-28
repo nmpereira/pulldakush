@@ -4,6 +4,10 @@ const mongoRunner = async ({
   variation_document,
   location_id,
   company_name,
+  locationName,
+  locationAddress,
+  linkToProduct,
+  linkToStore,
 }) => {
   const now = Date.now();
 
@@ -14,11 +18,23 @@ const mongoRunner = async ({
       company_name,
     });
 
+    // console.log({ locationName, locationAddress, linkToProduct, linkToStore });
+
+    if (!locationAddress || !locationName || !linkToProduct || !linkToStore) {
+      console.error(
+        `Missing one of the following: ${locationAddress}, ${locationName}, ${linkToProduct}, ${linkToStore} for variation ${variation_document.variationid}`
+      );
+    }
+
     if (!variation) {
       const result = await Products.create({
         company_name,
         location_id: location_id,
         ...variation_document,
+        locationName,
+        locationAddress,
+        linkToProduct,
+        linkToStore,
 
         updatedAt: now,
 
@@ -41,6 +57,11 @@ const mongoRunner = async ({
       variation.location_id = location_id;
       variation.company_name = company_name;
       variation.updatedAt = now;
+
+      variation.locationName = locationName;
+      variation.locationAddress = locationAddress;
+      variation.linkToProduct = linkToProduct;
+      variation.linkToStore = linkToStore;
 
       const action = [];
       if (

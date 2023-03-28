@@ -14,6 +14,9 @@ const onePlantRunner = async () => {
   const start_time = Date.now();
   const company_name = "OnePlant";
 
+  const store_url = `https://www.oneplant.ca`;
+  let linkToStore = `${store_url}/locations/`;
+
   const { sessionToken } = await getOneplantAuth({
     company_id: "22",
     location_id: default_location,
@@ -27,21 +30,44 @@ const onePlantRunner = async () => {
     url_prefix,
   });
 
-  const locations_list = locations_list_response.body.locations
-    .map((location) => location.locationid)
-    .filter((location) => [8, 3, 33, 15].includes(location));
-  // .filter((location) => location === 8);
+  const location_addresses = locations_list_response.body.locations.map(
+    (location) => {
+      return {
+        location_id: location.locationid,
+        address: location.storeaddress,
+        storeName: location.storename,
+      };
+    }
+  );
 
+  const locations_list = location_addresses
+    .filter(
+      // (location) => location.location_id === 8
+      (location) =>
+        // [8, 3, 33, 15].includes(location)
+        [8, 33].includes(location.location_id)
+    )
+    .map((location) => location.location_id);
   console.log("locations_list", locations_list);
 
-  // const variation_documents = [];
-
-  // const variation_documents_chunk = [];
-  // const variation_chunk_size = 100;
   let global_counter = 0;
   const updated_messages = [];
 
   for await (const location_id of locations_list) {
+    const locationName = location_addresses.find(
+      (location) => location.location_id === location_id
+    ).storeName;
+
+    const locationAddress = location_addresses.find(
+      (location) => location.location_id === location_id
+    ).address;
+
+    if (location_id === 8) {
+      linkToStore = `${linkToStore}north-york`;
+    } else if (location_id === 33) {
+      linkToStore = `${linkToStore}toronto-avenue-road`;
+    }
+
     const items_list = await getOneplantAllProductIds({
       company_id,
       location_id,
@@ -58,8 +84,6 @@ const onePlantRunner = async () => {
 
     for (const chunk of items_list_chunk) {
       const variation_promises = chunk.map(async (item) => {
-        global_counter++;
-
         const variation_prices = await getOneplantVariationPrices({
           company_id,
           location_id,
@@ -72,61 +96,77 @@ const onePlantRunner = async () => {
           return;
         }
 
-        const variation_document = variation_prices?.response[0];
+        const variation_document = variation_prices.response.map((doc) => {
+          global_counter++;
+          // rename and delete memberPrice to promoPrice and memberDiscountPercent to promoDiscountPercent
+          doc.promoPrice = doc.memberPrice;
+          delete doc.memberPrice;
 
-        // rename and delete memberPrice to promoPrice and memberDiscountPercent to promoDiscountPercent
-        variation_document.promoPrice = variation_document.memberPrice;
-        delete variation_document.memberPrice;
+          doc.promoDiscountPercent = doc.memberDiscountPercent;
+          delete doc.memberDiscountPercent;
 
-        variation_document.promoDiscountPercent =
-          variation_document.memberDiscountPercent;
-        delete variation_document.memberDiscountPercent;
+          doc.variation_name = doc.variation;
+          delete doc.variation;
 
-        variation_document.variation_name = variation_document.variation;
-        delete variation_document.variation;
+          doc.total_size = doc.equivalent;
+          delete doc.equivalent;
 
-        variation_document.total_size = variation_document.equivalent;
-        delete variation_document.equivalent;
+          doc.pack_size = doc.packsize;
+          delete doc.packsize;
 
-        variation_document.pack_size = variation_document.packsize;
-        delete variation_document.packsize;
+          doc.price = parseFloat(doc.price);
+          doc.promoPrice = parseFloat(doc.promoPrice) || parseFloat(doc.price);
+          doc.total_size = parseFloat(doc.total_size) || 0;
+          doc.originalPrice =
+            parseFloat(doc.originalPrice) || parseFloat(doc.price);
+          doc.discountPercent = parseFloat(doc.discountPercent) || 0;
+          doc.promoDiscountPercent = parseFloat(doc.promoDiscountPercent) || 0;
+          doc.location_id = location_id;
 
-        variation_document.price = parseFloat(variation_document.price);
-        variation_document.promoPrice =
-          parseFloat(variation_document.promoPrice) ||
-          parseFloat(variation_document.price);
-        variation_document.total_size =
-          parseFloat(variation_document.total_size) || 0;
-        variation_document.originalPrice =
-          parseFloat(variation_document.originalPrice) ||
-          parseFloat(variation_document.price);
-        variation_document.discountPercent =
-          parseFloat(variation_document.discountPercent) || 0;
-        variation_document.promoDiscountPercent =
-          parseFloat(variation_document.promoDiscountPercent) || 0;
-        variation_document.location_id = location_id;
+          return doc;
+        });
+        if (variation_document.length > 1) {
+          console.log(item, `has ${variation_document.length} variations`);
+        }
 
         return variation_document;
       });
 
-      const variation_documents = await Promise.all(variation_promises);
-
-      // for (
-      //   let i = 0;
-      //   i < variation_documents.length;
-      //   i += variation_chunk_size
-      // ) {
-      //   variation_documents_chunk.push(
-      //     variation_documents.slice(i, i + variation_chunk_size)
-      //   );
-      // }
+      const variation_documents = [];
+      for await (const document of variation_promises) {
+        if (document) {
+          variation_documents.push(...document);
+        }
+      }
 
       const messages_array = [];
       for await (const document of variation_documents) {
+        let linkToProduct = `${linkToStore}#/products/${document.product_id}`;
+
+        const clean_document = {
+          company_name: company_name,
+          brandname: document.brandname,
+          location_id: document.location_id,
+          displayname: document.displayname,
+          product_id: document.product_id,
+          variationid: document.variationid,
+          variation_name: document.variation_name,
+          total_size: document.total_size,
+          pack_size: document.pack_size,
+          price: document.price,
+          quantityStatus: document.quantityStatus,
+          promoPrice: document.promoPrice,
+          productName: document.productName,
+        };
+
         const write_response = await mongoRunner({
-          variation_document: document,
+          variation_document: clean_document,
           location_id,
           company_name,
+          locationName,
+          locationAddress,
+          linkToProduct,
+          linkToStore,
         });
 
         write_response.action.forEach((action) => {

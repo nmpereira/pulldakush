@@ -69,6 +69,22 @@ const ProductsSchema = new mongoose.Schema({
     type: Date,
     required: false,
   },
+  linkToStore: {
+    type: String,
+    required: true,
+  },
+  linkToProduct: {
+    type: String,
+    required: true,
+  },
+  locationAddress: {
+    type: String,
+    required: true,
+  },
+  locationName: {
+    type: String,
+    required: true,
+  },
   createdAt: {
     type: Date,
     default: Date.now,
