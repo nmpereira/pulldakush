@@ -8,14 +8,41 @@ const duchieRunner = async () => {
   const num_pages = 0;
   const perPage = 1000000000;
   const dispensaries_list = [
-    { Ashario: "62e2f7e9b5fb8064976fb4c6" },
+    { "ashario-centrepoint-mall": "62e2f7e9b5fb8064976fb4c6" },
+    { "ashario-north-york": "62e2f859eb1eb12e116e97c3" },
+    { "ashario-aurora": "62e2f833c37b526cbc4eaf6d" },
     { euphoria: "61425f9168131a00c62f9e11" },
   ];
+
   for await (const dispensary of dispensaries_list) {
     // get key from dispensaries_list object
     const company_name = Object.keys(dispensary)[0];
     // get value from dispensaries_list object
     const dispensaryId = Object.values(dispensary)[0];
+
+    const store_url_prefix = `https://www.dutchie.com`;
+
+    let linkToStore = "";
+    if (company_name === "euphoria") {
+      const store_url_prefix = `https://www.dutchie.com`;
+      linkToStore = `${store_url_prefix}/dispensary/euphoria-bud`;
+    } else {
+      linkToStore = `https://www.ashario.com/pages/${company_name}`;
+    }
+
+    let locationName = company_name;
+    let locationAddress = "";
+    if (company_name === "ashario-centrepoint-mall") {
+      locationAddress =
+        "6464 Yonge St. Unit #187 Centerpoint Mall, North York, ON M2M 3X4 Canada";
+    } else if (company_name === "ashario-north-york") {
+      locationAddress =
+        "1111A Finch Ave. West Unit #1, North York, ON M3J 2P7 Canada";
+    } else if (company_name === "ashario-aurora") {
+      locationAddress = "15114 Yonge St. Aurora, ON L4G 1M2, Canada";
+    } else if (company_name === "euphoria") {
+      locationAddress = "1027 Finch Ave W Toronto, ON";
+    }
 
     console.log("company_name", company_name);
     console.log("dispensaryId", dispensaryId);
@@ -53,6 +80,7 @@ const duchieRunner = async () => {
           await Promise.all(
             option.Options.map(async (o, i) => {
               const now = new Date();
+
               const variation_document = {
                 company_name: company_name,
                 brandname: option.brandName || option.cName,
@@ -74,6 +102,7 @@ const duchieRunner = async () => {
                 promoPrice: option.recPrices[index_counter],
                 productName: option.Name,
                 updatedAt: now,
+                linkToProduct: `${store_url_prefix}/embedded-menu/${company_name}/product/${option.cName}`,
               };
 
               variation_documents.push(variation_document);
@@ -98,10 +127,15 @@ const duchieRunner = async () => {
       const messages_array = [];
       for await (const document of variation_document) {
         write_counter++;
+
         const write_response = await mongoRunner({
           variation_document: document,
           location_id: dispensaryId,
           company_name,
+          locationName,
+          locationAddress,
+          linkToProduct: document.linkToProduct,
+          linkToStore,
         });
 
         if (!write_response) {

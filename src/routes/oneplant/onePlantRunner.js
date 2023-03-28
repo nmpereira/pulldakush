@@ -15,7 +15,7 @@ const onePlantRunner = async () => {
   const company_name = "OnePlant";
 
   const store_url = `https://www.oneplant.ca`;
-  let linkToStore = `${store_url}/locations/`;
+  let linkToStore_prefix = `${store_url}/locations/`;
 
   const { sessionToken } = await getOneplantAuth({
     company_id: "22",
@@ -62,10 +62,11 @@ const onePlantRunner = async () => {
       (location) => location.location_id === location_id
     ).address;
 
+    let linkToStore = ``;
     if (location_id === 8) {
-      linkToStore = `${linkToStore}north-york`;
+      linkToStore = `${linkToStore_prefix}north-york`;
     } else if (location_id === 33) {
-      linkToStore = `${linkToStore}toronto-avenue-road`;
+      linkToStore = `${linkToStore_prefix}toronto-avenue-road`;
     }
 
     const items_list = await getOneplantAllProductIds({
@@ -98,6 +99,7 @@ const onePlantRunner = async () => {
 
         const variation_document = variation_prices.response.map((doc) => {
           global_counter++;
+
           // rename and delete memberPrice to promoPrice and memberDiscountPercent to promoDiscountPercent
           doc.promoPrice = doc.memberPrice;
           delete doc.memberPrice;
@@ -125,9 +127,6 @@ const onePlantRunner = async () => {
 
           return doc;
         });
-        if (variation_document.length > 1) {
-          console.log(item, `has ${variation_document.length} variations`);
-        }
 
         return variation_document;
       });

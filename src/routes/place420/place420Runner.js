@@ -13,6 +13,10 @@ const Place420Runner = async () => {
     const company_name = "The420Place";
     const store_id = 5502;
 
+    const locationAddress = "1052A Finch Ave W, North York, ON M3J 2E2";
+    const locationName = "Finch Ave";
+    const linkToStore = "https://www.the420place.ca/shop";
+
     const auth_url = `${base_url}${auth_endpoint}?domain=${domain}`;
     const auth_response = await axios.get(auth_url);
     const token = auth_response.data.token;
@@ -107,11 +111,16 @@ const Place420Runner = async () => {
     for await (const variation_document of chunks) {
       const messages_array = [];
       for await (const document of variation_document) {
+        const linkToProduct = `${linkToStore}#/product/${document.product_id}`;
         write_counter++;
         const write_response = await mongoRunner({
           variation_document: document,
           location_id: store_id,
           company_name,
+          locationName,
+          locationAddress,
+          linkToProduct,
+          linkToStore,
         });
 
         if (!write_response) {
