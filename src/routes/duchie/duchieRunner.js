@@ -11,7 +11,7 @@ const duchieRunner = async () => {
     { "ashario-centrepoint-mall": "62e2f7e9b5fb8064976fb4c6" },
     { "ashario-north-york": "62e2f859eb1eb12e116e97c3" },
     { "ashario-aurora": "62e2f833c37b526cbc4eaf6d" },
-    { euphoria: "61425f9168131a00c62f9e11" },
+    { "euphoria-bud": "61425f9168131a00c62f9e11" },
   ];
 
   for await (const dispensary of dispensaries_list) {
@@ -40,7 +40,7 @@ const duchieRunner = async () => {
         "1111A Finch Ave. West Unit #1, North York, ON M3J 2P7 Canada";
     } else if (company_name === "ashario-aurora") {
       locationAddress = "15114 Yonge St. Aurora, ON L4G 1M2, Canada";
-    } else if (company_name === "euphoria") {
+    } else if (company_name === "euphoria-bud") {
       locationAddress = "1027 Finch Ave W Toronto, ON";
     }
 
