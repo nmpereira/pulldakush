@@ -1,4 +1,5 @@
 const axios = require("axios");
+const { log } = require("../helpers/logging");
 
 const getOneplantAuth = async ({
   company_id,
@@ -22,10 +23,10 @@ const getOneplantAuth = async ({
         }
       )
       .catch((error) => {
-        console.log("getOneplantAuth error", error);
+        log("helpers", "getOneplantAuth error", error);
       });
     const sessionToken = auth_response.data.body.sessionToken;
-    console.log("getOneplantAuth", sessionToken);
+    log("helpers", "getOneplantAuth", sessionToken);
     return { sessionToken };
   } catch (error) {
     throw new Error(error);
@@ -47,10 +48,10 @@ const getOneplantLocations = async ({
         },
       })
       .catch((error) => {
-        console.log("getOneplantLocations error", error);
+        log("helpers", "getOneplantLocations error", error);
       });
 
-    console.log("getOneplantLocations");
+    log("helpers", "getOneplantLocations");
     return location_response.data;
   } catch (error) {
     throw new Error(error);
@@ -73,7 +74,7 @@ const getOneplantProducts = async ({
         },
       })
       .catch((error) => {
-        console.log("getOneplantProducts error", error);
+        log("helpers", "getOneplantProducts error", error);
       });
 
     return product_response.data;
@@ -90,7 +91,7 @@ const getOneplantVariationPrices = async ({
   url_prefix,
 }) => {
   try {
-    // console.log("getOneplantVariationPrices", product_id);
+    // log("helpers","getOneplantVariationPrices", product_id);
     const product_url = `${url_prefix}/location/${location_id}/products/${product_id}`;
     const product_response = await axios
       .get(product_url, {
@@ -100,11 +101,15 @@ const getOneplantVariationPrices = async ({
         },
       })
       .catch((error) => {
-        if (product_response.syscall === "getaddrinfo") {
-          console.log("Invalid response from API call (data undefined)", error);
+        if (product_response?.syscall === "getaddrinfo") {
+          log(
+            "helpers",
+            "Invalid response from API call (data undefined)",
+            error
+          );
           return null;
         }
-        console.log("getOneplantVariationPrices error", error);
+        log("helpers", "getOneplantVariationPrices error", error);
       });
 
     if (product_response.data.statusCode !== 200) {
@@ -112,7 +117,8 @@ const getOneplantVariationPrices = async ({
         if (
           product_response.data.body === "Product not found, or not in stock."
         ) {
-          console.log(
+          log(
+            "helpers",
             "404 handled for",
             product_id,
             "at",
@@ -122,9 +128,10 @@ const getOneplantVariationPrices = async ({
           );
           return null;
         }
-        console.log("404 unhanded:", product_response.data);
+        log("helpers", "404 unhanded:", product_response.data);
       }
-      console.log(
+      log(
+        "helpers",
         "Error: Non-404 code received for",
         product_id,
         "at",
@@ -153,13 +160,10 @@ const getOneplantVariationPrices = async ({
         response: variations,
       };
     } else {
-      console.log(
-        "Invalid response from API call",
-        product_response.data.errorMessage
-      );
+      log("Invalid response from API call", product_response.data.errorMessage);
     }
   } catch (error) {
-    console.log("THROWN error", error);
+    log("helpers", "THROWN error", error);
     throw new Error(error);
   }
 };
@@ -184,7 +188,7 @@ const getOneplantAllProductIds = async ({
       product_ids.push(product.productId);
     }
 
-    console.log("getOneplantAllProductIds for:", location_id, product_ids);
+    log("helpers", "getOneplantAllProductIds for:", location_id, product_ids);
     return product_ids;
   } catch (error) {
     throw new Error(error);

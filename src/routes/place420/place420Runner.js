@@ -1,5 +1,6 @@
 const axios = require("axios");
 const { mongoRunner } = require("../helpers/mongoRunner");
+const { log } = require("../helpers/logging");
 
 const Place420Runner = async () => {
   try {
@@ -20,7 +21,7 @@ const Place420Runner = async () => {
     const auth_url = `${base_url}${auth_endpoint}?domain=${domain}`;
     const auth_response = await axios.get(auth_url);
     const token = auth_response.data.token;
-    console.log("token", token);
+    log("place420runner", "token", token);
 
     const product_response = await axios.get(
       `${base_url}${products_endpoint}?page=1`,
@@ -49,7 +50,8 @@ const Place420Runner = async () => {
         }
       );
       products.push(...page_response.data.data);
-      console.log(
+      log(
+        "place420runner",
         `420Place: Page ${page + 1} of ${last_page} done || Retrieved ${
           products.length
         }/${total} products.`
@@ -60,7 +62,7 @@ const Place420Runner = async () => {
 
     const all_variations = products.map((product) => {
       if (product.dispensary.length > 1) {
-        console.log("has more than 1 dispensary size");
+        log("place420runner", "has more than 1 dispensary size");
       }
 
       return product.dispensary[0].sizes.map((element, index) => {
@@ -124,7 +126,7 @@ const Place420Runner = async () => {
         });
 
         if (!write_response) {
-          console.log("error", document.id);
+          log("place420runner", "error", document.id);
           return;
         }
 
@@ -144,7 +146,8 @@ const Place420Runner = async () => {
               write_response.result.priceHistory,
               write_response.result.promoPriceHistory
             );
-            console.log(
+            log(
+              "place420runner",
               action,
               write_response.result.priceHistory,
               write_response.result.promoPriceHistory
@@ -152,7 +155,8 @@ const Place420Runner = async () => {
           }
         });
       }
-      console.log(
+      log(
+        "place420runner",
         "locaionid: ",
         store_id,
         "|| counter:",
@@ -161,18 +165,20 @@ const Place420Runner = async () => {
         new Date(Date.now() - start_time).toISOString().substr(11, 8)
       );
     }
-    console.log(
+    log(
+      "place420runner",
       "Updated:",
       updated_messages.length,
       "|| messages:",
       updated_messages
     );
-    console.log(
+    log(
+      "place420runner",
       "time:",
       new Date(Date.now() - start_time).toISOString().substr(11, 8)
     );
   } catch (err) {
-    console.log(err);
+    log("place420runner", "Error", err);
   }
 };
 

@@ -1,4 +1,5 @@
 const Products = require("../../models/Products");
+const { log } = require("../helpers/logging");
 
 const mongoRunner = async ({
   variation_document,
@@ -18,7 +19,7 @@ const mongoRunner = async ({
       company_name,
     });
 
-    // console.log({ locationName, locationAddress, linkToProduct, linkToStore });
+    // log("MongoRunner",{ locationName, locationAddress, linkToProduct, linkToStore });
 
     if (!locationAddress || !locationName || !linkToProduct || !linkToStore) {
       console.error(
@@ -107,7 +108,12 @@ const mongoRunner = async ({
       }
     }
   } catch (error) {
-    console.log({ variation_document, location_id, company_name, error });
+    log("MongoRunner", {
+      variation_document,
+      location_id,
+      company_name,
+      error,
+    });
   }
 };
 

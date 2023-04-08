@@ -3,9 +3,10 @@ const { CronJob } = require("cron");
 const onePlantRunner = require("./routes/oneplant/onePlantRunner");
 const duchieRunner = require("./routes/duchie/duchieRunner");
 const { startAll } = require("./routes/helpers/startAll");
+const { log } = require("./routes/helpers/logging");
 
 const scheduler = () => {
-  console.log("scheduler");
+  log("scheduler", "scheduler");
 
   //   every 5 seconds
   const cronJob = new CronJob(
@@ -17,11 +18,11 @@ const scheduler = () => {
     // every 30 minutes
     // "0 */30 * * * *",
     async () => {
-      // console.log("Starting OnePlant Scheduler", new Date());
+      // log("scheduler","Starting OnePlant Scheduler", new Date());
       // onePlantRunner();
       // //  wait 15 mins
       // await new Promise((resolve) => setTimeout(resolve, 900000));
-      // console.log("Starting OnePlant Scheduler", new Date());
+      // log("scheduler","Starting OnePlant Scheduler", new Date());
       // duchieRunner();
 
       await startAll();

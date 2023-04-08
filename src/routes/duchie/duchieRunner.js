@@ -1,7 +1,8 @@
 const { mongoRunner } = require("../helpers/mongoRunner");
+const { log } = require("../helpers/logging");
 
 const duchieRunner = async () => {
-  console.log("duchie script starting...");
+  log("duchieRunner", "duchie script starting...");
   // send a graphql query using axios
   const axios = require("axios");
 
@@ -44,8 +45,8 @@ const duchieRunner = async () => {
       locationAddress = "1027 Finch Ave W Toronto, ON";
     }
 
-    console.log("company_name", company_name);
-    console.log("dispensaryId", dispensaryId);
+    log("duchieRunner", "company_name", company_name);
+    log("duchieRunner", "dispensaryId", dispensaryId);
 
     const query = `https://dutchie.com/graphql?operationName=FilteredProducts&variables={"includeEnterpriseSpecials":false,"includeCannabinoids":true,"productsFilter":{"dispensaryId":"${dispensaryId}","pricingType":"rec","strainTypes":[],"subcategories":[],"Status":"Active","types":[],"useCache":false,"sortDirection":1,"sortBy":"weight","isDefaultSort":true,"bypassOnlineThresholds":false,"isKioskMenu":false,"removeProductsBelowOptionThresholds":true},"page":${num_pages},"perPage":${perPage}}&extensions={"persistedQuery":{"version":1,"sha256Hash":"8c6184010874741ccacd9e88b88f433fa5ba6e2699d52d406973d28e094bf1ec"}}`;
 
@@ -54,10 +55,12 @@ const duchieRunner = async () => {
     const updated_messages = [];
     const start_time = Date.now();
     const response = await axios.get(query).catch((err) => {
-      console.log("Error", err);
+      log("duchieRunner", "Error", err);
     });
 
-    console.log(
+    log(
+      "duchieRunner",
+      "duchieRunner",
       "Found",
       response.data.data.filteredProducts.products.length,
       "products from: ",
@@ -139,7 +142,7 @@ const duchieRunner = async () => {
         });
 
         if (!write_response) {
-          console.log("error", document.id);
+          log("duchieRunner", "error", document.id);
           return;
         }
 
@@ -159,7 +162,8 @@ const duchieRunner = async () => {
               write_response.result.priceHistory,
               write_response.result.promoPriceHistory
             );
-            console.log(
+            log(
+              "duchieRunner",
               action,
               write_response.result.priceHistory,
               write_response.result.promoPriceHistory
@@ -167,7 +171,8 @@ const duchieRunner = async () => {
           }
         });
       }
-      console.log(
+      log(
+        "duchieRunner",
         "locaionid: ",
         dispensaryId,
         "|| counter:",
@@ -176,19 +181,21 @@ const duchieRunner = async () => {
         new Date(Date.now() - start_time).toISOString().substr(11, 8)
       );
     }
-    console.log(
+    log(
+      "duchieRunner",
       "Updated:",
       updated_messages.length,
       "|| messages:",
       updated_messages
     );
-    console.log(
+    log(
+      "duchieRunner",
       "time:",
       new Date(Date.now() - start_time).toISOString().substr(11, 8)
     );
   }
 
-  console.log("duchie script finished");
+  log("duchieRunner", "duchie script finished");
 
   return;
 };

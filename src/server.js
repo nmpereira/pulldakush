@@ -6,6 +6,7 @@ const dbUri = process.env.MONGODB_URI;
 const routes = require("./routes/routes");
 const { scheduler } = require("./scheduler");
 const { startAll } = require("./routes/helpers/startAll");
+const { log } = require("./routes/helpers/logging");
 
 const mongoose = require("mongoose");
 
@@ -36,13 +37,15 @@ mongoose.connect(
   },
   (err) => {
     if (err) {
-      console.log("Error connecting to database: ", err);
+      log("server", "Error connecting to database: ", err);
     } else {
-      console.log(
+      log(
+        "server",
         `Connected to database: ${mongoose.connection.host}:${mongoose.connection.name}`
       );
       app.listen(port, () =>
-        console.log(
+        log(
+          "server",
           `Server is running on ${
             process.env.NODE_ENV === "production"
               ? `port: ${port}`

@@ -1,9 +1,10 @@
 const { getOneplantAllProductIds } = require("./helpers");
 
 const { mongoRunner } = require("../helpers/mongoRunner");
+const { log } = require("../helpers/logging");
 
 const onePlantRunner = async () => {
-  console.log("oneplant script starting...");
+  log("OnePlantRunner", "oneplant script starting...");
   const { getOneplantAuth } = require("./helpers");
   const { getOneplantLocations } = require("./helpers");
   const { getOneplantVariationPrices } = require("./helpers");
@@ -48,7 +49,7 @@ const onePlantRunner = async () => {
         [8, 33].includes(location.location_id)
     )
     .map((location) => location.location_id);
-  console.log("locations_list", locations_list);
+  log("OnePlantRunner", "locations_list", locations_list);
 
   let global_counter = 0;
   const updated_messages = [];
@@ -184,7 +185,8 @@ const onePlantRunner = async () => {
               write_response.result.priceHistory,
               write_response.result.promoPriceHistory
             );
-            console.log(
+            log(
+              "OnePlantRunner",
               action,
               write_response.result.priceHistory,
               write_response.result.promoPriceHistory
@@ -192,7 +194,8 @@ const onePlantRunner = async () => {
           }
         });
       }
-      console.log(
+      log(
+        "OnePlantRunner",
         "locaionid: ",
         location_id,
         "|| counter:",
@@ -202,18 +205,20 @@ const onePlantRunner = async () => {
       );
     }
   }
-  console.log(
+  log(
+    "OnePlantRunner",
     "Updated:",
     updated_messages.length,
     "|| messages:",
     updated_messages
   );
-  console.log(
+  log(
+    "OnePlantRunner",
     "time:",
     new Date(Date.now() - start_time).toISOString().substr(11, 8)
   );
 
-  console.log("done with all locations");
+  log("OnePlantRunner", "done with all locations");
 
   return;
 };
