@@ -5,9 +5,17 @@ const Place420Runner = require("../place420/place420Runner");
 const startAll = async () => {
   // start time
   const startTime = new Date();
-  await onePlantRunner();
-  await duchieRunner();
-  await Place420Runner();
+
+  // pick one randomly
+  const runners = [onePlantRunner, duchieRunner, Place420Runner];
+  // rearrange the array randomly
+  const randomRunners = runners.sort(() => Math.random() - 0.5);
+  console.log("randomRunners", randomRunners);
+
+  // run all runners
+  for await (const runner of randomRunners) {
+    await runner();
+  }
 
   //   log time
   const endTime = new Date();
