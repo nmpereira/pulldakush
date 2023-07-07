@@ -13,7 +13,9 @@ const scheduler = () => {
     // every 5 hours
     // "0 */5 * * *",
     // every 1 hour
-    "0 */1 * * *",
+    // "0 */1 * * *",
+    // everyday at 10 am
+    "0 10 * * *",
 
     // every 30 minutes
     // "0 */30 * * * *",
